@@ -1,29 +1,43 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import pandas as pd
 
-from app.services.model_loader import (
-    MODELS,
-    FEATURE_COLUMNS
+from app.services.model_loader import MODELS
+from app.schemas.prediction import (
+    PredictionRequest,
+    PredictionResponse
 )
 
 router = APIRouter()
 
-@router.post("/predict")
-def predict(data: dict):
 
-    model_name = data["model"]
-    features = data["features"]
+@router.get("/models")
+def get_models():
+    return {
+        "models": list(MODELS.keys())
+    }
 
-    row = {}
 
-    for col in FEATURE_COLUMNS:
-        row[col] = features.get(col, 0)
+@router.post(
+    "/predict",
+    response_model=PredictionResponse
+)
+def predict(data: PredictionRequest):
 
-    df = pd.DataFrame([row])
+    if data.model not in MODELS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown model: {data.model}"
+        )
 
-    model = MODELS[model_name]
+    model = MODELS[data.model]
 
-    prediction = int(model.predict(df)[0])
+    df = pd.DataFrame([
+        data.features.model_dump()
+    ])
+
+    prediction = int(
+        model.predict(df)[0]
+    )
 
     probability = None
 
@@ -32,20 +46,37 @@ def predict(data: dict):
             model.predict_proba(df)[0][1]
         )
 
-    return {
-        "model": model_name,
-        "prediction": prediction,
-        "probability": probability
-    }
+    return PredictionResponse(
+        model=data.model,
+        prediction=prediction,
+        probability=probability
+    )
 
-@router.get("/models")
-def get_models():
+@router.post("/predict/all")
+def predict_all(data: PredictionRequest):
 
-    return {
-        "models": [
-            "logistic",
-            "random_forest",
-            "xgboost",
-            "svm"
-        ]
-    }
+    df = pd.DataFrame([
+        data.features.model_dump()
+    ])
+
+    results = {}
+
+    for model_name, model in MODELS.items():
+
+        prediction = int(
+            model.predict(df)[0]
+        )
+
+        probability = None
+
+        if hasattr(model, "predict_proba"):
+            probability = float(
+                model.predict_proba(df)[0][1]
+            )
+
+        results[model_name] = {
+            "prediction": prediction,
+            "probability": probability
+        }
+
+    return results
