@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.services.model_loader import MODELS
 
 from app.schemas.prediction import (
     PredictionRequest,

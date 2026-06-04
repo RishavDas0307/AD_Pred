@@ -18,3 +18,10 @@ def home():
     return {
         "message": "Alzheimer Prediction API Running"
     }
+
+@app.get("/health")
+def health():
+
+    return {
+        "status": "healthy"
+    }
