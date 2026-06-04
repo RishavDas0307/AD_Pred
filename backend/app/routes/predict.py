@@ -1,20 +1,16 @@
-from fastapi import APIRouter, HTTPException
-import pandas as pd
+from fastapi import APIRouter
 
-from app.services.model_loader import MODELS
 from app.schemas.prediction import (
     PredictionRequest,
     PredictionResponse
 )
 
+from app.services.prediction_service import (
+    predict_single,
+    predict_all
+)
+
 router = APIRouter()
-
-
-@router.get("/models")
-def get_models():
-    return {
-        "models": list(MODELS.keys())
-    }
 
 
 @router.post(
@@ -23,60 +19,30 @@ def get_models():
 )
 def predict(data: PredictionRequest):
 
-    if data.model not in MODELS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown model: {data.model}"
-        )
-
-    model = MODELS[data.model]
-
-    df = pd.DataFrame([
+    result = predict_single(
+        data.model,
         data.features.model_dump()
-    ])
-
-    prediction = int(
-        model.predict(df)[0]
     )
-
-    probability = None
-
-    if hasattr(model, "predict_proba"):
-        probability = float(
-            model.predict_proba(df)[0][1]
-        )
 
     return PredictionResponse(
         model=data.model,
-        prediction=prediction,
-        probability=probability
+        prediction=result["prediction"],
+        probability=result["probability"]
     )
 
+
 @router.post("/predict/all")
-def predict_all(data: PredictionRequest):
+def predict_every_model(
+    data: PredictionRequest
+):
 
-    df = pd.DataFrame([
+    return predict_all(
         data.features.model_dump()
-    ])
+    )
 
-    results = {}
+@router.get("/models")
+def get_models():
+    return {
+        "models": list(MODELS.keys())
+    }
 
-    for model_name, model in MODELS.items():
-
-        prediction = int(
-            model.predict(df)[0]
-        )
-
-        probability = None
-
-        if hasattr(model, "predict_proba"):
-            probability = float(
-                model.predict_proba(df)[0][1]
-            )
-
-        results[model_name] = {
-            "prediction": prediction,
-            "probability": probability
-        }
-
-    return results

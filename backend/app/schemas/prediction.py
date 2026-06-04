@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import Literal
 
 class Features(BaseModel):
     Age: float
@@ -40,13 +40,16 @@ class Features(BaseModel):
     DifficultyCompletingTasks: int
     Forgetfulness: int
 
-
-class PredictionRequest(BaseModel):
-    model: str
-    features: Features
-
-
 class PredictionResponse(BaseModel):
     model: str
     prediction: int
     probability: float | None = None
+
+class PredictionRequest(BaseModel):
+    model: Literal[
+        "logistic",
+        "random_forest",
+        "xgboost",
+        "svm"
+    ]
+    features: Features
