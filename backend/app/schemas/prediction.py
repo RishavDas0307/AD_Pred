@@ -47,7 +47,7 @@ class PredictionResponse(BaseModel):
 
 class PredictionRequest(BaseModel):
     model: Literal[
-        "logistic",
+        "logistic_regression",
         "random_forest",
         "xgboost",
         "svm"
