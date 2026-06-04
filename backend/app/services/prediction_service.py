@@ -1,6 +1,13 @@
 import pandas as pd
 
-from app.services.model_loader import MODELS, get_model
+from app.services.model_loader import FEATURE_COLUMNS, MODELS, get_model
+
+
+def _prepare_input_frame(features: dict) -> pd.DataFrame:
+    """Build a single-row frame with exact training column order and numeric types."""
+    df = pd.DataFrame([features])
+    df = df.reindex(columns=FEATURE_COLUMNS, fill_value=0)
+    return df.apply(pd.to_numeric, errors="coerce").fillna(0.0)
 
 
 def predict_single(
@@ -9,8 +16,7 @@ def predict_single(
 ):
 
     model = get_model(model_name)
-
-    df = pd.DataFrame([features])
+    df = _prepare_input_frame(features)
 
     prediction = int(
         model.predict(df)[0]
