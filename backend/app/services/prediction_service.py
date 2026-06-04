@@ -1,6 +1,6 @@
 import pandas as pd
 
-from app.services.model_loader import MODELS
+from app.services.model_loader import MODELS, get_model
 
 
 def predict_single(
@@ -8,7 +8,7 @@ def predict_single(
     features: dict
 ):
 
-    model = MODELS[model_name]
+    model = get_model(model_name)
 
     df = pd.DataFrame([features])
 
