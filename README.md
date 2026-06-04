@@ -10,6 +10,7 @@ Alzheimer's Disease is a progressive neurodegenerative disorder and the most com
 
 ---
 
+
 ## 🗂️ Project Structure
 
 ```
