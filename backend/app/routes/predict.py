@@ -28,7 +28,8 @@ def predict(data: PredictionRequest):
     return PredictionResponse(
         model=data.model,
         prediction=result["prediction"],
-        probability=result["probability"]
+        probability=result["probability"],
+        explanations=result.get("explanations")
     )
 
 

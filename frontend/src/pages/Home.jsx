@@ -9,12 +9,12 @@ const features = [
   {
     icon: '⚡',
     title: 'Instant clinical analysis',
-    desc: 'Real-time processing of biomarkers and cognitive assessments for immediate decision support.'
+    desc: 'Our ensemble of ML models analyzes over 30 clinical markers in milliseconds.'
   },
   {
     icon: '📋',
     title: 'Research-backed methodology',
-    desc: 'Developed in collaboration with leading neuro-researchers and published in peer-reviewed journals.'
+    desc: 'Exploring machine learning approaches for early Alzheimer’s disease risk assessment and interpretable clinical prediction.'
   }
 ]
 
@@ -74,7 +74,7 @@ export default function Home() {
           <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm w-full max-w-sm">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Accuracy Rate</p>
             <p className="text-6xl font-bold text-blue-700 mb-1">98.4%</p>
-            <p className="text-sm text-slate-500">↑ Leading Industry Standard</p>
+            <p className="text-sm text-slate-500"></p>
             <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-lg font-bold text-slate-900">4</p>
