@@ -1,29 +1,42 @@
 # 🧠 AD_Pred — Alzheimer's Disease Prediction System
 
-A machine learning web application that predicts the likelihood of Alzheimer's Disease based on patient clinical data. Built as a BTech Mini Project using Python, Scikit-learn, and Streamlit.
+A full-stack machine learning web application that predicts the likelihood of Alzheimer's Disease based on patient clinical data. Built with a **FastAPI** backend serving trained ML models and SHAP explainability, and a modern **React + Vite + Tailwind CSS** frontend.
 
 ---
 
 ## 📌 Problem Statement
 
-Alzheimer's Disease is a progressive neurodegenerative disorder and the most common cause of dementia. Early detection is critical for better patient outcomes, yet diagnosis remains difficult in clinical settings. This project aims to assist early screening by predicting whether a patient is likely to have Alzheimer's Disease based on clinical and demographic features, using supervised machine learning.
+Alzheimer's Disease is a progressive neurodegenerative disorder and the most common cause of dementia. Early detection is critical for better patient outcomes, yet diagnosis remains difficult in clinical settings. This project aims to assist early screening by predicting whether a patient is likely to have Alzheimer's Disease based on clinical and demographic features, using supervised machine learning with explainable AI (XAI).
 
 ---
-
 
 ## 🗂️ Project Structure
 
 ```
 AD_Pred/
+├── backend/                    # FastAPI backend API
+│   ├── app/
+│   │   ├── routes/             # API routes (predict, explain)
+│   │   ├── schemas/            # Pydantic data schemas
+│   │   ├── services/           # Model loading, predictions & SHAP services
+│   │   └── main.py             # FastAPI entry point & CORS configuration
+│   └── requirements.txt        # Backend Python dependencies
 │
-├── ml/                        # Jupyter notebooks for EDA, preprocessing & model training
-│   └── alzheimer_model.ipynb
+├── frontend/                   # React + Vite frontend application
+│   ├── src/
+│   │   ├── components/         # Reusable UI components (Navbar, Footer)
+│   │   ├── pages/              # Application pages (Home, Predictor, Research, Docs)
+│   │   ├── App.jsx             # React routing
+│   │   └── main.jsx            # React root entry point
+│   ├── package.json            # Node.js dependencies and scripts
+│   ├── tailwind.config.js      # Tailwind CSS configuration
+│   └── vite.config.js          # Vite build tool configuration
 │
-├── backend/                   # Python backend serving the trained model
-│   └── app.py
-│
-├── frontend/                  # Streamlit frontend for user interaction
-│   └── streamlit_app.py
+├── ml/                         # Machine learning pipeline
+│   ├── datasets/               # Dataset (alzheimers_disease_data.csv)
+│   ├── evaluation/             # Model metrics, ROC curves, confusion matrices
+│   ├── notebooks/              # Jupyter notebooks for model training & EDA
+│   └── trained_models/         # Serialized models (.pkl) & feature columns
 │
 └── README.md
 ```
@@ -59,68 +72,111 @@ AD_Pred/
 
 ## 🤖 Models Trained
 
-Multiple classification models were trained and compared:
+Multiple classification models were trained, evaluated, and compared:
 
-| Model | Notes |
-|---|---|
-| Logistic Regression | Baseline model |
-| Support Vector Machine (SVM) | Tested with RBF kernel |
-| Random Forest | ✅ Best performing model |
-| XGBoost | Gradient boosted trees |
+| Model | Accuracy | Precision | Recall | F1 Score | ROC AUC |
+|---|---|---|---|---|---|
+| **Random Forest** (Best) | **95.12%** | **94.56%** | **91.45%** | **92.98%** | **93.74%** |
+| **XGBoost** | 94.65% | 93.88% | 90.79% | 92.31% | 94.47% |
+| **SVM** | 84.19% | 74.42% | 84.21% | 79.01% | 89.74% |
+| **Logistic Regression** | 81.63% | 69.52% | 85.53% | 76.70% | 88.31% |
 
 ### Best Model: Random Forest Classifier
 
-The Random Forest model was selected for deployment based on its superior performance.
-
-**Evaluation Metrics (Random Forest):**
-
-| Metric | Score |
-|---|---|
-| Accuracy | *(add your value)* |
-| Precision | *(add your value)* |
-| Recall | *(add your value)* |
-| F1 Score | *(add your value)* |
-
-> 📝 Fill in the exact metric values from your notebook output.
+The **Random Forest** classifier achieved the highest overall accuracy (95.12%) and F1 score (92.98%), providing dependable clinical risk screening.
 
 ---
 
-## 🖥️ Application
+## 🖥️ Features
 
-The web application is built with **Streamlit**. The user fills a form with the patient's clinical data and receives an instant binary prediction:
-
-- ✅ **Not Likely to have Alzheimer's**
-- ⚠️ **Likely to have Alzheimer's**
+- 🩺 **Multi-Step Assessment Form**: Guided clinical data input across demographics, lifestyle, clinical measures, and cognitive symptoms.
+- ⚡ **Instant Multi-Model Predictions**: Get binary diagnosis risk and probability scores using Random Forest, XGBoost, SVM, or Logistic Regression.
+- 🔍 **SHAP Explainable AI**: Feature attribution analysis identifying the top contributing risk factors behind each prediction.
+- 📊 **Research & Benchmarks**: Interactive model comparison metrics and charts.
+- 📖 **API Documentation**: Built-in interactive documentation and OpenAPI integration.
 
 ---
 
 ## ⚙️ How to Run
 
-### 1. Clone the repository
+### Prerequisites
+
+Ensure you have the following installed on your machine:
+- **Python 3.10+** & `pip`
+- **Node.js 18+** & `npm`
+- **Git**
+
+---
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/RishavDas0307/AD_Pred.git
 cd AD_Pred
 ```
 
-### 2. Install dependencies
+---
+
+### 2. Run the Backend API (FastAPI)
+
+Open a terminal window and run:
 
 ```bash
+# Navigate to the backend directory
+cd backend
+
+# Create a virtual environment (optional but recommended)
+python -m venv venv
+
+# Activate the virtual environment
+# On Linux / macOS:
+source venv/bin/activate
+# On Windows (PowerShell):
+# .\venv\Scripts\Activate.ps1
+# On Windows (Command Prompt):
+# .\venv\Scripts\activate.bat
+
+# Install backend dependencies
 pip install -r requirements.txt
+
+# Start the FastAPI server with auto-reload
+uvicorn app.main:app --reload --port 8000
 ```
 
-### 3. Train the model (optional — if model file not included)
+- **Backend API URL**: `http://localhost:8000`
+- **Interactive API Docs (Swagger UI)**: `http://localhost:8000/docs`
+- **Alternative API Docs (ReDoc)**: `http://localhost:8000/redoc`
 
-Open and run the notebook in `ml/` to generate the trained model file (`.pkl`).
+---
 
-### 4. Run the Streamlit app
+### 3. Run the Website Frontend (React + Vite)
+
+Open a **separate terminal window** and run:
 
 ```bash
+# Navigate to the frontend directory
 cd frontend
-streamlit run streamlit_app.py
+
+# Install frontend dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
 ```
 
-The app will open at `http://localhost:8501`
+- **Website URL**: `http://localhost:5173`
+
+---
+
+## 🔌 API Endpoints Summary
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | API health check |
+| `GET` | `/models` | List all available trained models |
+| `POST` | `/predict` | Run prediction for a single model (returns prediction & probability) |
+| `POST` | `/predict/all` | Run all 4 models simultaneously on clinical features |
+| `POST` | `/explain` | SHAP-based feature importance & contribution analysis |
 
 ---
 
@@ -128,12 +184,11 @@ The app will open at `http://localhost:8501`
 
 | Layer | Technology |
 |---|---|
-| Language | Python 3.x |
-| ML Library | Scikit-learn, XGBoost |
-| Data Processing | Pandas, NumPy |
-| Visualization | Matplotlib, Seaborn |
-| Frontend | Streamlit |
-| Notebook | Jupyter |
+| **Backend API** | FastAPI, Uvicorn, Pydantic |
+| **Frontend UI** | React 19, Vite, Tailwind CSS, React Router |
+| **ML & Explainability** | Scikit-learn, XGBoost, SHAP, Joblib |
+| **Data Processing** | Pandas, NumPy |
+| **Notebooks & Charts** | Jupyter, Matplotlib, Seaborn |
 
 ---
 
@@ -142,15 +197,17 @@ The app will open at `http://localhost:8501`
 | Name | Role |
 |---|---|
 | Rishav Das | ML, Backend, Frontend |
-| *(add teammates)* | *(add roles)* |
 
 ---
 
 ## 📚 References
 
 - [Kaggle Alzheimer's Dataset](https://www.kaggle.com/)
-- Scikit-learn Documentation — https://scikit-learn.org
-- Streamlit Documentation — https://docs.streamlit.io
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [React Documentation](https://react.dev/)
+- [Vite Documentation](https://vitejs.dev/)
+- [Scikit-learn Documentation](https://scikit-learn.org/)
+- [SHAP (SHapley Additive exPlanations)](https://shap.readthedocs.io/)
 
 ---
 
