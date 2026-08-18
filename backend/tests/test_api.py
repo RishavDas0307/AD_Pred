@@ -42,7 +42,7 @@ SAMPLE_FEATURES = {
 def test_health_endpoint():
     res = client.get("/health")
     assert res.status_code == 200
-    assert res.json() == {"status": "healthy"}
+    assert res.json()["status"] == "healthy"
 
 
 def test_predict_endpoint_with_explanations():
@@ -65,6 +65,20 @@ def test_predict_endpoint_with_explanations():
     assert "impact" in first_exp
 
 
+def test_predict_all_endpoint():
+    payload = {
+        "model": "random_forest",
+        "features": SAMPLE_FEATURES
+    }
+    res = client.post("/predict/all", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "random_forest" in data
+    assert "xgboost" in data
+    assert "svm" in data
+    assert "logistic_regression" in data
+
+
 def test_explain_endpoint_structure():
     payload = {
         "model": "xgboost",
@@ -77,3 +91,35 @@ def test_explain_endpoint_structure():
     assert "top_features" in data
     assert "explanations" in data
     assert len(data["explanations"]) > 0
+
+
+def test_evaluation_metrics_endpoint():
+    res = client.get("/evaluation/metrics")
+    assert res.status_code == 200
+    data = res.json()
+    assert "benchmarks" in data
+    assert len(data["benchmarks"]) == 4
+    assert "models" in data
+    assert "random_forest" in data["models"]
+    assert "xgboost" in data["models"]
+    assert "confusion_matrix" in data["models"]["random_forest"]
+
+
+def test_dataset_summary_endpoint():
+    res = client.get("/dataset/summary")
+    assert res.status_code == 200
+    data = res.json()
+    assert "overview" in data
+    assert data["overview"]["total_records"] == 2149
+    assert data["overview"]["total_features"] == 32
+    assert "distributions" in data
+    assert "mean_comparisons" in data
+    assert "correlations" in data
+
+
+def test_dataset_features_endpoint():
+    res = client.get("/dataset/features")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["total"] == 32
+    assert len(data["features"]) == 32

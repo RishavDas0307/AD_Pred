@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.Python
+*.manifest
+*.spec
 
 # Python Virtual Environments
 .venv/
@@ -14,7 +17,7 @@ backend/venv/
 env.bak/
 venv.bak/
 
-# Node.js & Frontend dependencies/builds
+# Node.js & Frontend dependencies / builds
 node_modules/
 frontend/node_modules/
 dist/
@@ -27,10 +30,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 *.local
+.vite/
+frontend/.vite/
 
 # Testing & Coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
 .nox/
@@ -46,9 +52,7 @@ htmlcov/
 !.env.example
 
 # IDE & Editor Files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 .idea/
 *.suo
 *.ntvs*
@@ -56,5 +60,16 @@ htmlcov/
 *.sln
 *.sw?
 *~
+*.bak
+
+# OS Generated Files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Log files
+*.log
