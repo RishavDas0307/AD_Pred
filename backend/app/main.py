@@ -20,7 +20,7 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 # CORS Configuration
 # ---------------------------------------------------------------------------
-# Standard local development origins
+# Standard development and production origins
 DEFAULT_DEV_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -28,6 +28,7 @@ DEFAULT_DEV_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "https://ad-pred.vercel.app",
 ]
 
 allowed_origins = list(DEFAULT_DEV_ORIGINS)

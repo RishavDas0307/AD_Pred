@@ -2,6 +2,11 @@
 const API_URL = import.meta.env.VITE_API_URL;
 export const API_BASE = (API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
+export const isLocalhostTarget = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
+export const isRunningOnProduction = typeof window !== 'undefined' && 
+  window.location.hostname !== 'localhost' && 
+  window.location.hostname !== '127.0.0.1';
+
 const DEFAULT_TIMEOUT_MS = 30000;
 
 async function request(endpoint, options = {}) {
@@ -40,21 +45,24 @@ async function request(endpoint, options = {}) {
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      throw new Error(`Request timed out after ${timeoutMs / 1000}s. If the backend is hosted on a free tier (such as Render), it may take 30-50s to spin up from sleep. Please retry in a few moments.`);
+      throw new Error(`Request timed out after ${timeoutMs / 1000}s. If the backend is hosted on Render free tier, it takes ~30-50s to wake from sleep. Please wait a moment and retry.`);
     }
     if (err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch'))) {
-      throw new Error(`Unable to reach backend API at ${API_BASE}. Please check server health or verify network/CORS configuration.`);
+      if (isRunningOnProduction && isLocalhostTarget) {
+        throw new Error(`Frontend is deployed at ${window.location.hostname} but attempting to reach ${API_BASE}. Please set VITE_API_URL in your Vercel project environment variables to your Render backend URL.`);
+      }
+      throw new Error(`Unable to reach backend API at ${API_BASE}. If using Render free tier, the instance may be starting up. Please check CORS and server status.`);
     }
     throw err;
   }
 }
 
 export const api = {
-  async checkHealth() {
+  async checkHealth(timeoutMs = 8000) {
     try {
-      return await request('/health', { timeout: 4000 });
-    } catch {
-      return { status: 'offline' };
+      return await request('/health', { timeout: timeoutMs });
+    } catch (e) {
+      return { status: 'offline', error: e.message };
     }
   },
 
