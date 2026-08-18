@@ -40,10 +40,21 @@ class Features(BaseModel):
     DifficultyCompletingTasks: int
     Forgetfulness: int
 
+class ExplanationItem(BaseModel):
+    feature: str
+    label: str
+    value: float | int
+    formatted_value: str
+    contribution: float
+    abs_contribution: float
+    impact: Literal["increased_risk", "lower_risk"]
+    statement: str
+
 class PredictionResponse(BaseModel):
     model: str
     prediction: int
     probability: float | None = None
+    explanations: list[ExplanationItem] | None = None
 
 class PredictionRequest(BaseModel):
     model: Literal[

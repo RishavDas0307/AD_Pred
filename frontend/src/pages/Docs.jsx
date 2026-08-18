@@ -1,257 +1,279 @@
-import { useState } from 'react'
-
-const sidebarSections = [
-  {
-    heading: 'PROJECT',
-    links: ['Project Overview', 'Contributors', 'Repository']
-  },
-  {
-    heading: 'API DOCS',
-    links: ['Integration Guide', 'Endpoints', 'Authentication']
-  }
-]
+import { useState } from 'react';
+import {
+  Code2,
+  FileCode,
+  CheckCircle2,
+  Copy,
+  Terminal,
+  Send,
+  Layers,
+  Sparkles
+} from 'lucide-react';
+import MedicalDisclaimer from '../components/MedicalDisclaimer';
 
 const endpoints = [
   {
     method: 'POST',
     path: '/predict',
-    desc: 'Run prediction for a single model. Returns prediction (0 or 1) and probability score.',
-    body: `{
+    title: 'Single Model Prediction & SHAP Attribution',
+    desc: 'Runs inference using the specified ML model (random_forest, xgboost, svm, logistic_regression) and returns the binary prediction, risk probability, and ranked natural language SHAP factor explanations.',
+    request: `{
   "model": "random_forest",
   "features": {
-    "Age": 72,
-    "MMSE": 24,
-    "FunctionalAssessment": 7,
-    ...
+    "Age": 72.0,
+    "Gender": 0,
+    "Ethnicity": 0,
+    "EducationLevel": 1,
+    "BMI": 26.5,
+    "Smoking": 0,
+    "AlcoholConsumption": 5.0,
+    "PhysicalActivity": 3.0,
+    "DietQuality": 6.0,
+    "SleepQuality": 7.0,
+    "FamilyHistoryAlzheimers": 1,
+    "CardiovascularDisease": 0,
+    "Diabetes": 0,
+    "Depression": 0,
+    "HeadInjury": 0,
+    "Hypertension": 0,
+    "SystolicBP": 130.0,
+    "DiastolicBP": 85.0,
+    "CholesterolTotal": 210.0,
+    "CholesterolLDL": 130.0,
+    "CholesterolHDL": 50.0,
+    "CholesterolTriglycerides": 160.0,
+    "MMSE": 16.0,
+    "FunctionalAssessment": 4.5,
+    "MemoryComplaints": 1,
+    "BehavioralProblems": 0,
+    "ADL": 4.0,
+    "Confusion": 0,
+    "Disorientation": 0,
+    "PersonalityChanges": 0,
+    "DifficultyCompletingTasks": 0,
+    "Forgetfulness": 1
   }
 }`,
     response: `{
   "model": "random_forest",
   "prediction": 1,
-  "probability": 0.82
+  "probability": 0.884,
+  "explanations": [
+    {
+      "feature": "MMSE",
+      "label": "Cognitive assessment (MMSE score)",
+      "value": 16.0,
+      "formatted_value": "16.0 / 30",
+      "contribution": 0.215,
+      "abs_contribution": 0.215,
+      "impact": "increased_risk",
+      "statement": "Lower MMSE cognitive score (16.0 / 30) contributed significantly to the estimated risk."
+    },
+    {
+      "feature": "MemoryComplaints",
+      "label": "Reported memory complaints",
+      "value": 1,
+      "formatted_value": "Present",
+      "contribution": 0.142,
+      "abs_contribution": 0.142,
+      "impact": "increased_risk",
+      "statement": "Reported memory complaints increased the estimated risk."
+    }
+  ]
 }`
   },
   {
     method: 'POST',
     path: '/predict/all',
-    desc: 'Run all 4 models simultaneously and return results for each.',
-    body: `{
+    title: 'Multi-Model Consensus Inference',
+    desc: 'Runs inference simultaneously across all 4 trained models (Random Forest, XGBoost, SVM, Logistic Regression) to verify algorithmic consensus.',
+    request: `{
   "model": "random_forest",
   "features": { ... }
 }`,
     response: `{
-  "random_forest": { "prediction": 1, "probability": 0.82 },
-  "xgboost": { "prediction": 1, "probability": 0.79 },
-  "svm": { "prediction": 1, "probability": null },
-  "logistic_regression": { "prediction": 0, "probability": 0.43 }
+  "random_forest": { "prediction": 1, "probability": 0.884, "explanations": [ ... ] },
+  "xgboost": { "prediction": 1, "probability": 0.862, "explanations": [ ... ] },
+  "svm": { "prediction": 1, "probability": 0.815, "explanations": [ ... ] },
+  "logistic_regression": { "prediction": 1, "probability": 0.792, "explanations": [ ... ] }
 }`
   },
   {
     method: 'POST',
     path: '/explain',
-    desc: 'Get SHAP-based feature attribution for a prediction. Returns top 10 contributing features.',
-    body: `{
-  "model": "random_forest",
+    title: 'SHAP Feature Attribution Service',
+    desc: 'Computes local feature contribution values and natural language clinical statements for any model.',
+    request: `{
+  "model": "xgboost",
   "features": { ... }
 }`,
     response: `{
-  "model": "random_forest",
+  "model": "xgboost",
   "top_features": [
-    ["MemoryComplaints", 0.176],
-    ["FunctionalAssessment", 0.153],
-    ["MMSE", -0.043]
-  ]
+    ["MMSE", 0.245],
+    ["FunctionalAssessment", 0.182],
+    ["MemoryComplaints", 0.115]
+  ],
+  "explanations": [ ... ]
 }`
   },
   {
     method: 'GET',
-    path: '/models',
-    desc: 'Returns a list of all available model names.',
-    body: null,
+    path: '/evaluation/metrics',
+    title: 'Model Evaluation Benchmarks & ROC Data',
+    desc: 'Returns stored benchmark metrics from model_comparison.csv, 2x2 test confusion matrices, and ROC curve coordinates for all 4 models.',
+    request: null,
     response: `{
-  "models": [
-    "logistic_regression",
-    "random_forest",
-    "xgboost",
-    "svm"
-  ]
+  "benchmarks": [
+    { "model_name": "Random Forest", "accuracy": 0.9512, "precision": 0.9456, "recall": 0.9145, "f1_score": 0.9298, "roc_auc": 0.9374 },
+    { "model_name": "XGBoost", "accuracy": 0.9465, "precision": 0.9388, "recall": 0.9079, "f1_score": 0.9231, "roc_auc": 0.9447 }
+  ],
+  "models": { ... },
+  "test_sample_count": 430
+}`
+  },
+  {
+    method: 'GET',
+    path: '/dataset/summary',
+    title: 'Clinical Dataset Summary & Statistics',
+    desc: 'Returns computed statistics from alzheimers_disease_data.csv including total cohort count, class balance, numerical distributions, and correlations.',
+    request: null,
+    response: `{
+  "overview": {
+    "total_records": 2149,
+    "total_features": 32,
+    "missing_values": 0,
+    "class_distribution": { "negative_count": 1389, "positive_count": 760 }
+  },
+  "distributions": { ... },
+  "mean_comparisons": [ ... ]
+}`
+  },
+  {
+    method: 'GET',
+    path: '/dataset/features',
+    title: 'Clinical Data Dictionary Specification',
+    desc: 'Returns the full definition metadata for all 32 clinical features (labels, categories, ranges, units, options, and descriptions).',
+    request: null,
+    response: `{
+  "total": 32,
+  "categories": ["Demographics", "Lifestyle", "Medical History", "Clinical Measurements", "Cognitive & Symptoms"],
+  "features": [ ... ]
 }`
   },
   {
     method: 'GET',
     path: '/health',
-    desc: 'Health check endpoint to verify the API is running.',
-    body: null,
-    response: `{ "status": "healthy" }`
-  },
-]
-
-const contributors = [
-  { name: 'Rishav Das', role: 'Lead Developer & ML Architect', initials: 'RD' },
-]
-
-const methodColors = {
-  GET: 'bg-green-100 text-green-700',
-  POST: 'bg-blue-100 text-blue-700',
-}
+    title: 'System Health Check',
+    desc: 'Verifies FastAPI server readiness and confirms trained model artifacts are loaded.',
+    request: null,
+    response: `{ "status": "healthy", "models_loaded": 4, "dataset_connected": true }`
+  }
+];
 
 export default function Docs() {
-  const [active, setActive] = useState('Project Overview')
-  const [openEndpoint, setOpenEndpoint] = useState(null)
+  const [copiedIdx, setCopiedIdx] = useState(null);
+
+  function copyToClipboard(text, idx) {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-primary uppercase tracking-wider">Developer &amp; Clinical API</span>
+          <span className="text-xs font-mono px-2 py-0.5 rounded bg-surface-container text-charcoal-variant font-bold">
+            REST v1.0
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-charcoal mt-1">
+          API Reference &amp; Integration Guide
+        </h1>
+        <p className="text-xs sm:text-sm text-charcoal-variant mt-1 max-w-3xl leading-relaxed">
+          Technical specifications for integrating the AD_Pred inference engine, dataset services, and SHAP explainability pipelines.
+        </p>
+      </div>
 
-      {/* Sidebar */}
-      <aside className="w-56 shrink-0 bg-white border-r border-slate-200 py-8 px-4 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto">
-        {sidebarSections.map(section => (
-          <div key={section.heading} className="mb-6">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-              {section.heading}
-            </p>
-            <div className="flex flex-col gap-1">
-              {section.links.map(link => (
-                <button
-                  key={link}
-                  onClick={() => setActive(link)}
-                  className={`text-left text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                    active === link
-                      ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-700'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {link}
-                </button>
-              ))}
+      {/* Base URL Box */}
+      <div className="clinical-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low">
+        <div className="flex items-center gap-3">
+          <Terminal className="w-5 h-5 text-primary shrink-0" />
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-variant">Base API Endpoint</span>
+            <div className="font-mono text-sm font-bold text-charcoal">http://localhost:8000</div>
+          </div>
+        </div>
+        <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 font-semibold w-fit">
+          CORS Enabled (Local Dev &amp; Production)
+        </span>
+      </div>
+
+      {/* Endpoints List */}
+      <div className="space-y-6">
+        {endpoints.map((ep, idx) => (
+          <div key={ep.path} className="clinical-card p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-charcoal-border pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded ${
+                  ep.method === 'POST' ? 'bg-primary text-white' : 'bg-emerald-600 text-white'
+                }`}>
+                  {ep.method}
+                </span>
+                <span className="font-mono text-sm font-bold text-charcoal">{ep.path}</span>
+              </div>
+              <h3 className="text-xs font-bold text-charcoal-variant">{ep.title}</h3>
+            </div>
+
+            <p className="text-xs text-charcoal-variant leading-relaxed">{ep.desc}</p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+              {/* Request */}
+              {ep.request && (
+                <div>
+                  <div className="flex items-center justify-between text-xs font-mono text-charcoal-variant mb-1">
+                    <span>Request Body (JSON)</span>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(ep.request, `req-${idx}`)}
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>{copiedIdx === `req-${idx}` ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <pre className="p-3.5 rounded-xl bg-charcoal text-slate-100 font-mono text-[11px] overflow-x-auto max-h-56">
+                    {ep.request}
+                  </pre>
+                </div>
+              )}
+
+              {/* Response */}
+              <div className={ep.request ? '' : 'lg:col-span-2'}>
+                <div className="flex items-center justify-between text-xs font-mono text-charcoal-variant mb-1">
+                  <span>Response (JSON)</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(ep.response, `res-${idx}`)}
+                    className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>{copiedIdx === `res-${idx}` ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+                <pre className="p-3.5 rounded-xl bg-charcoal text-slate-100 font-mono text-[11px] overflow-x-auto max-h-56">
+                  {ep.response}
+                </pre>
+              </div>
             </div>
           </div>
         ))}
+      </div>
 
-        <div className="mt-4">
-          <a
-            href="https://github.com/RishavDas0307/AD_Pred"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            <span>⌥</span> GitHub Repo
-          </a>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 max-w-4xl mx-auto px-8 py-12">
-
-        <h1 className="text-4xl font-bold text-slate-900 mb-3">Documentation</h1>
-        <p className="text-slate-500 mb-10 max-w-xl leading-relaxed">
-          A comprehensive guide to AD_Pred: a clinical-grade Alzheimer's Disease
-          prediction system leveraging machine learning and tabular clinical data analysis.
-        </p>
-
-        {/* Info cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="text-2xl mb-3">🔬</div>
-            <h3 className="font-semibold text-slate-900 mb-2">Scientific Basis</h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Built on multi-modal clinical biomarkers including cognitive assessment
-              metrics and demographic data to provide highly accurate early-stage detection.
-            </p>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="text-2xl mb-3">🔒</div>
-            <h3 className="font-semibold text-slate-900 mb-2">Privacy & Ethics</h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              All predictions are processed locally. No patient data is stored or
-              transmitted externally. Built for academic and research use only.
-            </p>
-          </div>
-        </div>
-
-        {/* API Endpoints */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">API Endpoints</h2>
-          <p className="text-slate-500 text-sm mb-6">
-            The FastAPI backend runs on <code className="bg-slate-100 px-1.5 py-0.5 rounded text-blue-700 font-mono text-xs">http://localhost:8000</code>.
-            Interactive docs available at <code className="bg-slate-100 px-1.5 py-0.5 rounded text-blue-700 font-mono text-xs">/docs</code>.
-          </p>
-
-          <div className="flex flex-col gap-3">
-            {endpoints.map((ep, i) => (
-              <div key={ep.path} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setOpenEndpoint(openEndpoint === i ? null : i)}
-                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
-                >
-                  <span className={`text-xs font-bold px-2 py-1 rounded font-mono ${methodColors[ep.method]}`}>
-                    {ep.method}
-                  </span>
-                  <span className="font-mono text-sm text-slate-900 font-semibold">{ep.path}</span>
-                  <span className="text-sm text-slate-400 flex-1">{ep.desc}</span>
-                  <span className="text-slate-300 text-xs">{openEndpoint === i ? '▲' : '▼'}</span>
-                </button>
-
-                {openEndpoint === i && (
-                  <div className="border-t border-slate-100 px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {ep.body && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Request Body</p>
-                        <pre className="bg-slate-900 text-green-400 text-xs font-mono p-4 rounded-lg overflow-x-auto leading-relaxed">
-                          {ep.body}
-                        </pre>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Response</p>
-                      <pre className="bg-slate-900 text-green-400 text-xs font-mono p-4 rounded-lg overflow-x-auto leading-relaxed">
-                        {ep.response}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Contributors */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Lead Contributors</h2>
-          <div className="flex gap-4 flex-wrap">
-            {contributors.map(c => (
-              <div key={c.name} className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center gap-3 w-44">
-                <div className="w-14 h-14 rounded-full bg-blue-700 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">{c.initials}</span>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-blue-700">{c.name}</p>
-                  <p className="text-xs text-slate-400 mt-1">{c.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-slate-400 mt-4">Add your teammates to the contributors array in <code className="font-mono">Docs.jsx</code></p>
-        </div>
-
-        {/* Open Source CTA */}
-        <div className="bg-blue-700 rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <h3 className="text-xl font-bold text-white mb-2">Open Source Project</h3>
-            <p className="text-blue-200 text-sm max-w-md">
-              View the full source code, contribute improvements, and explore the ML notebooks on GitHub.
-            </p>
-          </div>
-          <a
-            href="https://github.com/RishavDas0307/AD_Pred"
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 bg-white text-blue-700 font-semibold text-sm px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            ⌥ View on GitHub
-          </a>
-        </div>
-
-      </main>
+      <MedicalDisclaimer />
     </div>
-  )
+  );
 }

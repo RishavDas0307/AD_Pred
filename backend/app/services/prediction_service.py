@@ -1,6 +1,7 @@
 import pandas as pd
 
 from app.services.model_loader import FEATURE_COLUMNS, MODELS, get_model
+from app.services.explanation_service import generate_explanations
 
 
 def _prepare_input_frame(features: dict) -> pd.DataFrame:
@@ -12,7 +13,8 @@ def _prepare_input_frame(features: dict) -> pd.DataFrame:
 
 def predict_single(
     model_name: str,
-    features: dict
+    features: dict,
+    include_explanations: bool = True
 ):
 
     model = get_model(model_name)
@@ -29,9 +31,21 @@ def predict_single(
             model.predict_proba(df)[0][1]
         )
 
+    explanations = None
+    if include_explanations:
+        try:
+            explanations = generate_explanations(
+                model_name=model_name,
+                features=features,
+                top_k=5
+            )
+        except Exception:
+            explanations = []
+
     return {
         "prediction": prediction,
-        "probability": probability
+        "probability": probability,
+        "explanations": explanations
     }
 
 
