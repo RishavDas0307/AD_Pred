@@ -49,7 +49,15 @@ htmlcov/
 # Environment & Secrets
 .env
 .env.*
+.env.local
+.env.*.local
 !.env.example
+!*/.env.example
+
+# Vercel deployment cache / config
+.vercel/
+.vercel
+
 
 # IDE & Editor Files
 .vscode/

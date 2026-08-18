@@ -6,7 +6,7 @@ from joblib import load
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 
-from app.services.model_loader import MODELS, FEATURE_COLUMNS, BASE_DIR
+from app.services.model_loader import MODELS, FEATURE_COLUMNS, BASE_DIR, EVALUATION_DIR, DATASETS_DIR
 
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
@@ -19,9 +19,9 @@ def _compute_evaluation_metrics():
         return _CACHED_EVALUATION
 
     # 1. Read static benchmark CSV
-    csv_path = os.path.join(BASE_DIR, "ml", "evaluation", "model_comparison.csv")
+    csv_path = EVALUATION_DIR / "model_comparison.csv"
     benchmarks = []
-    if os.path.exists(csv_path):
+    if csv_path.exists():
         bench_df = pd.read_csv(csv_path)
         for _, row in bench_df.iterrows():
             benchmarks.append({
@@ -34,11 +34,12 @@ def _compute_evaluation_metrics():
             })
 
     # 2. Compute live test evaluation for detailed confusion matrices & ROC curve coordinates
-    data_path = os.path.join(BASE_DIR, "ml", "datasets", "alzheimers_disease_data.csv")
+    data_path = DATASETS_DIR / "alzheimers_disease_data.csv"
     detailed_models = {}
 
-    if os.path.exists(data_path):
+    if data_path.exists():
         df = pd.read_csv(data_path)
+
         X = df[FEATURE_COLUMNS]
         y = df["Diagnosis"]
         _, X_test, _, y_test = train_test_split(

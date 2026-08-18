@@ -10,6 +10,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import MedicalDisclaimer from '../components/MedicalDisclaimer';
+import { API_BASE } from '../services/api';
 
 const endpoints = [
   {
@@ -204,8 +205,9 @@ export default function Docs() {
           <Terminal className="w-5 h-5 text-primary shrink-0" />
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-charcoal-variant">Base API Endpoint</span>
-            <div className="font-mono text-sm font-bold text-charcoal">http://localhost:8000</div>
+            <div className="font-mono text-sm font-bold text-charcoal">{API_BASE}</div>
           </div>
+
         </div>
         <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 font-semibold w-fit">
           CORS Enabled (Local Dev &amp; Production)

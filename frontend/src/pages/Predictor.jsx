@@ -267,8 +267,9 @@ export default function Predictor() {
       }, 100);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Prediction failed. Ensure the FastAPI backend is running on port 8000.');
+      setError(err.message || 'Prediction failed. Please ensure the FastAPI backend is running and reachable.');
     } finally {
+
       setLoading(false);
     }
   }

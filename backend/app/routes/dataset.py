@@ -2,8 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 from fastapi import APIRouter
-from app.services.model_loader import BASE_DIR, FEATURE_COLUMNS
+from app.services.model_loader import BASE_DIR, DATASETS_DIR, FEATURE_COLUMNS
 from app.services.explanation_service import FEATURE_METADATA
+
 
 router = APIRouter(prefix="/dataset", tags=["dataset"])
 
@@ -370,11 +371,12 @@ def _build_dataset_summary():
     if _CACHED_DATASET_SUMMARY is not None:
         return _CACHED_DATASET_SUMMARY
 
-    data_path = os.path.join(BASE_DIR, "ml", "datasets", "alzheimers_disease_data.csv")
-    if not os.path.exists(data_path):
+    data_path = DATASETS_DIR / "alzheimers_disease_data.csv"
+    if not data_path.exists():
         return {"error": "Dataset file not found"}
 
     df = pd.read_csv(data_path)
+
     total_records = len(df)
     diagnosis_counts = df["Diagnosis"].value_counts().to_dict()
     non_ad_count = int(diagnosis_counts.get(0, 0))

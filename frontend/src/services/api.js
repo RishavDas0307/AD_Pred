@@ -1,30 +1,58 @@
-const API_BASE = 'http://localhost:8000';
+// Centralized API Base URL configuration using Vite environment variable with local fallback
+const API_URL = import.meta.env.VITE_API_URL;
+export const API_BASE = (API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
-async function handleResponse(res) {
-  if (!res.ok) {
-    let errorDetail = `HTTP Error ${res.status}: ${res.statusText}`;
-    try {
-      const errJson = await res.json();
-      if (errJson.detail) {
-        if (Array.isArray(errJson.detail)) {
-          errorDetail = errJson.detail.map(d => `${d.loc?.join('.')} - ${d.msg}`).join(', ');
-        } else {
-          errorDetail = errJson.detail;
+const DEFAULT_TIMEOUT_MS = 30000;
+
+async function request(endpoint, options = {}) {
+  const url = `${API_BASE}${endpoint}`;
+  const timeoutMs = options.timeout ?? DEFAULT_TIMEOUT_MS;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      let errorDetail = `HTTP Error ${res.status}: ${res.statusText || 'Server Error'}`;
+      try {
+        const errJson = await res.json();
+        if (errJson.detail) {
+          if (Array.isArray(errJson.detail)) {
+            errorDetail = errJson.detail.map(d => `${d.loc ? d.loc.join('.') + ': ' : ''}${d.msg}`).join(', ');
+          } else {
+            errorDetail = String(errJson.detail);
+          }
+        } else if (errJson.message) {
+          errorDetail = String(errJson.message);
         }
+      } catch {
+        // Non-JSON response body
       }
-    } catch {
-      // Ignored
+      throw new Error(errorDetail);
     }
-    throw new Error(errorDetail);
+
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeoutMs / 1000}s. If the backend is hosted on a free tier (such as Render), it may take 30-50s to spin up from sleep. Please retry in a few moments.`);
+    }
+    if (err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch'))) {
+      throw new Error(`Unable to reach backend API at ${API_BASE}. Please check server health or verify network/CORS configuration.`);
+    }
+    throw err;
   }
-  return await res.json();
 }
 
 export const api = {
   async checkHealth() {
     try {
-      const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
-      return await handleResponse(res);
+      return await request('/health', { timeout: 4000 });
     } catch {
       return { status: 'offline' };
     }
@@ -32,8 +60,7 @@ export const api = {
 
   async getModels() {
     try {
-      const res = await fetch(`${API_BASE}/models`);
-      const data = await handleResponse(res);
+      const data = await request('/models', { timeout: 5000 });
       return data.models || ['random_forest', 'xgboost', 'svm', 'logistic_regression'];
     } catch (e) {
       console.warn('Using fallback model list', e);
@@ -42,44 +69,39 @@ export const api = {
   },
 
   async predictSingle(model, features) {
-    const res = await fetch(`${API_BASE}/predict`, {
+    return await request('/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model, features })
     });
-    return await handleResponse(res);
   },
 
   async predictAll(features) {
-    const res = await fetch(`${API_BASE}/predict/all`, {
+    return await request('/predict/all', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'random_forest', features })
     });
-    return await handleResponse(res);
   },
 
   async getExplanation(model, features) {
-    const res = await fetch(`${API_BASE}/explain`, {
+    return await request('/explain', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model, features })
     });
-    return await handleResponse(res);
   },
 
   async getEvaluationMetrics() {
-    const res = await fetch(`${API_BASE}/evaluation/metrics`);
-    return await handleResponse(res);
+    return await request('/evaluation/metrics');
   },
 
   async getDatasetSummary() {
-    const res = await fetch(`${API_BASE}/dataset/summary`);
-    return await handleResponse(res);
+    return await request('/dataset/summary');
   },
 
   async getDatasetFeatures() {
-    const res = await fetch(`${API_BASE}/dataset/features`);
-    return await handleResponse(res);
+    return await request('/dataset/features');
   }
 };
+
